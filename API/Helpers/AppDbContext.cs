@@ -10,6 +10,8 @@ namespace API.Helpers
     public class AppDbContext : DbContext
     {
         public DbSet<User> Users { get; set; }
+
+        public DbSet<ShortenedUrl> ShortenedUrls { get; set; }
         public IConfiguration Configuration { get; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options, IConfiguration configuration) : base(options)

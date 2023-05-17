@@ -1,14 +1,17 @@
 using API.Helpers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.OpenApi.Models;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllers();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -32,14 +35,16 @@ builder.Services.AddSwaggerGen(c =>
     };
     c.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, securityScheme);
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
-        {
-            { securityScheme, new string[] { } }
-        });
+    {
+        { securityScheme, new string[] { } }
+    });
 });
-;
+
 builder.Configuration.AddJsonFile("appsettings.json", optional: false);
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAnyOrigin", builder =>
@@ -49,9 +54,34 @@ builder.Services.AddCors(options =>
         builder.AllowAnyOrigin();
     });
 });
+
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy => policy.RequireRole("admin"));
+});
+
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var secretKey = Encoding.UTF8.GetBytes(jwtSettings.GetValue<string>("SecretKey"));
+var issuer = jwtSettings.GetValue<string>("Issuer");
+var audience = jwtSettings.GetValue<string>("Audience");
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = issuer,
+        ValidAudience = audience,
+        IssuerSigningKey = new SymmetricSecurityKey(secretKey)
+    };
 });
 
 var app = builder.Build();
@@ -68,6 +98,8 @@ app.UseHttpsRedirection();
 app.UseRouting();
 
 app.UseCors("AllowAnyOrigin");
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 

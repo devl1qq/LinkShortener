@@ -3,19 +3,22 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace API.Entities
 {
-    public class User
+    public class ShortenedUrl
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
         [Required]
-        public string Username { get; set; }
+        public string ShortUrl { get; set; }
 
         [Required]
-        public string Password { get; set; }
+        public string OriginalUrl { get; set; }
 
         [Required]
-        public string Role { get; set; }
+        public DateTime CreateDate { get; set; }
+
+        [Required]
+        public string CreatedBy { get; set; }
     }
 }

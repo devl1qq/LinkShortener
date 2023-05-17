@@ -2,6 +2,7 @@
 using API.Helpers;
 using API.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 
 namespace API.Controllers
 {
@@ -10,20 +11,20 @@ namespace API.Controllers
     public class UserController : ControllerBase
     {
         private readonly AppDbContext _dbContext;
+        private readonly IConfiguration _configuration;
 
-        public UserController(AppDbContext dbContext)
+        public UserController(AppDbContext dbContext, IConfiguration configuration)
         {
             _dbContext = dbContext;
+            _configuration = configuration;
         }
 
         [HttpPost("register")]
         public IActionResult Register(UserModel model)
         {
-
             var existingUser = _dbContext.Users.FirstOrDefault(u => u.Username == model.Username);
             if (existingUser != null)
             {
-
                 return BadRequest("Username already exists");
             }
 
@@ -43,28 +44,22 @@ namespace API.Controllers
         [HttpPost("login")]
         public IActionResult Login(UserModel model)
         {
-            // Find the user by username
             var user = _dbContext.Users.FirstOrDefault(u => u.Username == model.Username);
 
             if (user == null)
             {
-                // User not found, return error response
                 return BadRequest("Invalid username or password");
             }
 
             if (user.Password != model.Password)
             {
-                // Password is incorrect, return error response
                 return BadRequest("Invalid username or password");
             }
 
-            var jwtHelper = new JwtHelper();
+            var jwtHelper = new JwtHelper(_configuration);
             var token = jwtHelper.GenerateJwtToken(user);
 
-            // Return the token as a response
             return Ok(new { token });
         }
-
-
     }
 }
