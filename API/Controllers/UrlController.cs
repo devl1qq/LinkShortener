@@ -1,45 +1,57 @@
 ﻿using API.Entities;
 using API.Helpers;
+using API.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.CodeDom.Compiler;
+using Microsoft.Extensions.Configuration;
+using System;
+using System.Web;
 
 namespace API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class UrlController : Controller
+    public class UrlController : ControllerBase
     {
         private readonly IConfiguration _configuration;
         private readonly AppDbContext _dbContext;
+        private readonly UrlHelper _urlHelper;
 
-        public UrlController(IConfiguration configuration, AppDbContext dbContext)
+        public UrlController(IConfiguration configuration, AppDbContext dbContext, UrlHelper urlHelper)
         {
             _configuration = configuration;
             _dbContext = dbContext;
+            _urlHelper = urlHelper;
         }
 
         [HttpPost("create_short_url")]
         [Authorize]
-        public IActionResult CreateShortUrl(string url)
+        public async Task<IActionResult> CreateShortUrl(string originalUrl)
         {
-            if (string.IsNullOrEmpty(url)){
-                return BadRequest("URL cannot be empty");
+            if (!Uri.TryCreate(originalUrl, UriKind.Absolute, out Uri validatedUri))
+            {
+                return BadRequest("Invalid URL format.");
             }
-            var UrlHelper = new UrlHelper();
-            string ShortUrl = UrlHelper.GenerateShortURL(url);
+
+            var username = User.Identity.Name;
+            string[] generatedUrl = _urlHelper.GenerateShortURL();
+            string shortUrl = generatedUrl[0];
+            string shortUrlCode = generatedUrl[1];
+
             var shortenedURL = new ShortenedUrl
             {
-                ShortUrl = ShortUrl,
-                OriginalUrl = url,
+                ShortUrl = shortUrl,
+                ShortUrlCode = shortUrlCode,
+                OriginalUrl = originalUrl,
                 CreateDate = DateTime.UtcNow,
-                CreatedBy = "Me"
+                CreatedBy = username
             };
 
-            _dbContext.ShortenedUrls.Add(shortenedURL);
-            _dbContext.SaveChanges();
-            return Ok(ShortUrl);
+            await _dbContext.ShortenedUrls.AddAsync(shortenedURL);
+            await _dbContext.SaveChangesAsync();
+
+            return Ok(shortUrl);
         }
+
     }
 }

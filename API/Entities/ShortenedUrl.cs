@@ -13,6 +13,9 @@ namespace API.Entities
         public string ShortUrl { get; set; }
 
         [Required]
+        public string ShortUrlCode { get; set; }
+
+        [Required]
         public string OriginalUrl { get; set; }
 
         [Required]

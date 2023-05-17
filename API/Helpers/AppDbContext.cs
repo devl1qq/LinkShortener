@@ -26,7 +26,6 @@ namespace API.Helpers
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Seed initial admin user
             modelBuilder.Entity<User>().HasData(new User
             {
                 Id = 1,

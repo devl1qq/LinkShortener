@@ -1,22 +1,27 @@
 ﻿using System;
-using System.Data;
-using System.Text;
+using System.Linq;
+using Microsoft.AspNetCore.Http;
 
 namespace API.Helpers
 {
     public class UrlHelper
     {
-        public string GenerateShortURL(string url)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
+        public UrlHelper(IHttpContextAccessor httpContextAccessor)
         {
-            /*// Encode the URL to Base64
-            byte[] bytes = Encoding.UTF8.GetBytes(url);
-            string base64String = Convert.ToBase64String(bytes);
+            _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+        }
 
-            // Remove any special characters from the Base64 string
-            string shortUrl = base64String.Replace('+', '-').Replace('/', '_').TrimEnd('=');
-
-            return shortUrl;*/
-            return url;
+        public string[] GenerateShortURL()
+        {
+            var random = new Random();
+            const string chars = "ABCDEFGHIJKLMNOPORSTUVWXYZ1234567890@az";
+            var urlCode = new string(Enumerable.Repeat(chars, 8)
+                .Select(x => x[random.Next(x.Length)]).ToArray());
+            var request = _httpContextAccessor.HttpContext.Request;
+            var url = $"{request.Scheme}://{request.Host}/{urlCode}";
+            return new string[] { url, urlCode };
         }
     }
 }
