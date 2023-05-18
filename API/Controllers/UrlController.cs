@@ -4,7 +4,9 @@ using API.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using System;
+using System.Collections.Generic;
 using System.Web;
 
 namespace API.Controllers
@@ -51,6 +53,47 @@ namespace API.Controllers
             await _dbContext.SaveChangesAsync();
 
             return Ok(shortUrl);
+        }
+
+        [HttpGet("get_all_links")]
+        [Authorize]
+
+        public async Task<IActionResult> GetAllLinks()
+        {
+
+            var links =
+                _dbContext.ShortenedUrls.Select(x => new ShortenedUrl()
+                {
+                    Id = x.Id,
+                    ShortUrl = x.ShortUrl,
+                    ShortUrlCode = x.ShortUrlCode,
+                    OriginalUrl = x.OriginalUrl,
+                    CreateDate = x.CreateDate,
+                    CreatedBy = x.CreatedBy
+
+                }).ToList();
+            if (links.IsNullOrEmpty())
+            {
+                return BadRequest("There is no links.");
+
+            }
+            return Ok(links);
+        }
+
+        [HttpDelete("delete_link/{UrlId}")]
+        [Authorize(Roles = "admin")]
+
+        public async Task<IActionResult> DeleteLink(int UrlId)
+        {
+            var link = await _dbContext.ShortenedUrls.FindAsync(UrlId);
+            if (link == null) return NotFound();
+
+            _dbContext.ShortenedUrls.Remove(link);
+
+            var result = await _dbContext.SaveChangesAsync();
+
+            return Ok("Link has been deleted");
+
         }
 
     }
