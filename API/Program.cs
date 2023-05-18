@@ -19,7 +19,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<UrlHelper>();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Your API", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "API", Version = "v1" });
 
     // Add JWT authentication support for Swagger
     var securityScheme = new OpenApiSecurityScheme
