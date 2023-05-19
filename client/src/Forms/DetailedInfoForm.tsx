@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Container, Typography } from "@mui/material";
+import { Container, Typography, Box, CircularProgress } from "@mui/material";
 import { useParams } from "react-router-dom";
 
 interface ShortenedUrl {
@@ -39,30 +39,44 @@ const DetailedInfoForm: React.FC = () => {
   if (!url) {
     return (
       <Container maxWidth="md" sx={{ mt: 4 }}>
-        <Typography variant="body1" align="center">
-          Loading...
-        </Typography>
+        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "60vh" }}>
+          <CircularProgress />
+        </Box>
       </Container>
     );
   }
 
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
-      <Typography variant="h5" align="center" sx={{ mb: 2 }}>
-        Detailed Information
-      </Typography>
-      <Typography variant="body1" sx={{ fontWeight: "bold" }}>
-        Shortened URL: {url.shortUrl}
-      </Typography>
-      <Typography variant="body1">
-        Original URL: {url.originalUrl}
-      </Typography>
-      <Typography variant="body1">
-        Created Date: {url.createDate}
-      </Typography>
-      <Typography variant="body1">
-        Created By: {url.createdBy}
-      </Typography>
+      <Box sx={{ textAlign: "center", my: 2 }}>
+        <Typography variant="h5" sx={{ fontWeight: "bold" }}>
+          Detailed Information
+        </Typography>
+      </Box>
+      <Box sx={{ my: 2 }}>
+        <Typography variant="body1" sx={{ fontWeight: "bold" }}>
+          Shortened URL:
+        </Typography>
+        <Typography variant="body1">{url.shortUrl}</Typography>
+      </Box>
+      <Box sx={{ my: 2 }}>
+        <Typography variant="body1" sx={{ fontWeight: "bold" }}>
+          Original URL:
+        </Typography>
+        <Typography variant="body1">{url.originalUrl}</Typography>
+      </Box>
+      <Box sx={{ my: 2 }}>
+        <Typography variant="body1" sx={{ fontWeight: "bold" }}>
+          Created Date:
+        </Typography>
+        <Typography variant="body1">{url.createDate}</Typography>
+      </Box>
+      <Box sx={{ my: 2 }}>
+        <Typography variant="body1" sx={{ fontWeight: "bold" }}>
+          Created By:
+        </Typography>
+        <Typography variant="body1">{url.createdBy}</Typography>
+      </Box>
     </Container>
   );
 };

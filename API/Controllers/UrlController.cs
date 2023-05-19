@@ -107,10 +107,24 @@ namespace API.Controllers
 
             _dbContext.ShortenedUrls.Remove(link);
 
-            var result = await _dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
 
             return Ok("Link has been deleted");
 
+        }
+
+        [HttpGet("admin_check")]
+        [Authorize]
+
+        public async Task<IActionResult> AdminCheck()
+        {
+            bool result;
+ 
+            if (User.IsInRole("admin"))
+                result = true;
+            else
+                result = false;
+            return Ok(result);
         }
 
     }

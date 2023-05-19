@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Container, Typography, List, ListItem, ListItemText, Button, TextField, Box } from "@mui/material";
+import { Container, Typography, List, ListItem, Button, TextField, Box, Link } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 interface ShortenedUrl {
@@ -15,11 +15,13 @@ const ShortenedUrlsForm: React.FC = () => {
   const [urls, setUrls] = useState<ShortenedUrl[]>([]);
   const [originalUrl, setOriginalUrl] = useState("");
   const [error] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchUrls();
+    checkUserRole();
   }, []);
 
   const fetchUrls = async () => {
@@ -31,6 +33,20 @@ const ShortenedUrlsForm: React.FC = () => {
         },
       });
       setUrls(response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const checkUserRole = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get("https://localhost:7215/api/Url/admin_check", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setIsAdmin(response.data);
     } catch (error) {
       console.error(error);
     }
@@ -54,20 +70,33 @@ const ShortenedUrlsForm: React.FC = () => {
           },
         }
       );
-      
+
       const shortUrl = response.data;
       window.location.reload();
       console.log("Short URL:", shortUrl);
-      
+
       // Perform any further actions with the short URL if needed
-      
     } catch (error) {
       console.error("Error creating short URL:", error);
       // Handle error
     }
   };
-  
-  
+
+  const handleDeleteLink = async (id: number) => {
+    const token = localStorage.getItem("token");
+    try {
+      await axios.delete(`https://localhost:7215/api/Url/delete_link/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      fetchUrls(); // Refresh the links after deletion
+    } catch (error) {
+      console.error("Error deleting link:", error);
+      // Handle error
+    }
+  };
+
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
       <Typography variant="h5" align="center" sx={{ mb: 2 }}>
@@ -83,7 +112,7 @@ const ShortenedUrlsForm: React.FC = () => {
       />
       <Button variant="contained" color="primary" onClick={() => handleCreateShortLink(originalUrl)}>
         Create Short Link
-        </Button>
+      </Button>
       {error && (
         <Typography variant="body1" align="center" color="error" sx={{ mt: 2 }}>
           {error}
@@ -92,15 +121,23 @@ const ShortenedUrlsForm: React.FC = () => {
       <List sx={{ mt: 2 }}>
         {urls.map((url) => (
           <ListItem key={url.id}>
-            <ListItemText primary={`Short Link: ${url.shortUrl}`} />
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <Typography variant="body1" sx={{ marginRight: "8px" }}>
+                Short Link:
+              </Typography>
+              <Link href={url.shortUrl} target="_blank" rel="noopener noreferrer">
+                {url.shortUrl}
+              </Link>
+            </Box>
             <Box sx={{ marginLeft: "auto" }}>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() => handleMoreInfoClick(url.id)}
-              >
+              <Button variant="contained" color="primary" onClick={() => handleMoreInfoClick(url.id)}>
                 More Information
               </Button>
+              {isAdmin && (
+                <Button variant="contained" color="error" onClick={() => handleDeleteLink(url.id)}>
+                  Delete
+                </Button>
+              )}
             </Box>
           </ListItem>
         ))}
