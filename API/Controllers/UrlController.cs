@@ -28,9 +28,9 @@ namespace API.Controllers
 
         [HttpPost("create_short_url")]
         [Authorize]
-        public async Task<IActionResult> CreateShortUrl(string originalUrl)
+        public async Task<IActionResult> CreateShortUrl([FromBody] UrlModel model)
         {
-            if (!Uri.TryCreate(originalUrl, UriKind.Absolute, out Uri validatedUri))
+            if (!Uri.TryCreate(model.Url, UriKind.Absolute, out Uri validatedUri))
             {
                 return BadRequest("Invalid URL format.");
             }
@@ -44,7 +44,7 @@ namespace API.Controllers
             {
                 ShortUrl = shortUrl,
                 ShortUrlCode = shortUrlCode,
-                OriginalUrl = originalUrl,
+                OriginalUrl = model.Url,
                 CreateDate = DateTime.UtcNow,
                 CreatedBy = username
             };
@@ -54,6 +54,7 @@ namespace API.Controllers
 
             return Ok(shortUrl);
         }
+
 
         [HttpGet("get_all_links")]
         [Authorize]
@@ -78,6 +79,22 @@ namespace API.Controllers
 
             }
             return Ok(links);
+        }
+
+        [HttpGet("get_url_info/{UrlId}")]
+        [Authorize]
+
+        public async Task<IActionResult> GetUrlInfo(int UrlId)
+        {
+
+            var link = await _dbContext.ShortenedUrls.FindAsync(UrlId);                
+
+            if (link == null)
+            {
+                return BadRequest("There is no link.");
+
+            }
+            return Ok(link);
         }
 
         [HttpDelete("delete_link/{UrlId}")]
